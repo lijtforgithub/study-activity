@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>测试页面</title>
+    <script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+</head>
+<body>
+<!-- usemap 将图像定义为客户器端图像映射 -->
+<img src="" id="img" alt="流程实例图片" usemap="#plantmap"/>
+<!-- map 客户端图像映射器。通过img标签的usemap与map的name绑定 -->
+<map name="plantmap" id="area">
+    <!-- area 定义图像映射中的区域 -->
+</map>
+
+<div>
+    <h5 id="users"></h5>
+
+    <table width="900px" border="1">
+        <thead>
+        <th width="15%" align="left">审核人</th>
+        <th width="10%" align="left">审核状态</th>
+        <th align="left">审核意见</th>
+        <th width="15%" align="left">审核时间</th>
+        </thead>
+        <tbody id="records" align="left">
+        </tbody>
+    </table>
+</div>
+</body>
+<script>
+    const instanceId = getQueryVariable('instanceId');
+    $('#img').attr('src', 'http://localhost/instance/image/' + instanceId);
+    let info;
+    $.getJSON('http://localhost/instance/imageInfo/' + instanceId, function (data) {
+        if (data.code === 200) {
+            info = data.data;
+            let html = '';
+            for (let n in info) {
+                const obj = info[n];
+                const graphic = obj.graphic;
+
+                const coords = graphic.left + ',' + graphic.top + ',' + (graphic.left + graphic.width) + ',' + (graphic.top + graphic.height);
+                html += '<area shape="rect" href="javascript:void(0);" coords="' + coords + '" alt="' + obj.taskName + '" title="审批 ' + obj.count +
+                    ' 次" onclick=f("' + n + '") />';
+            }
+            $('#area').append(html);
+        } else {
+            alert(data.msg);
+        }
+    });
+
+    function f(id) {
+        const obj = info[id];
+
+        $('#users').empty();
+        $('#records').empty();
+
+        let users = '';
+        if (obj.users) {
+            for (let i = 0; i < obj.users.length; i++) {
+                users += obj.users[i].userName + ',';
+            }
+            $('#users').append('审批人：' + users.substring(0, users.length - 1));
+        }
+
+        if (obj.records) {
+            let html = '';
+            obj.records.forEach(r =>
+                html += '<tr><td>' + r.userName + '</><td>' + r.status + '</td><td>' + r.content + '</td><td>' + r.createTime + '</td></tr></tr>'
+            );
+            $('#records').append(html);
+        }
+    }
+
+    function getQueryVariable(variable) {
+        const query = window.location.search.substring(1);
+        const vars = query.split('&');
+        for (let i = 0; i < vars.length; i++) {
+            let pair = vars[i].split('=');
+            if (pair[0] === variable) {
+                return pair[1];
+            }
+        }
+        return false;
+    }
+</script>
+</html>

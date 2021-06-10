@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.guowy.workflow.webapp.mapper.InstanceRecordMapper">
+
+    <sql id="tb_name"> gwy_instance_record </sql>
+
+    <resultMap id="beanMap" type="com.guowy.workflow.webapp.dto.InstanceRecordDTO">
+        <id column="id"/>
+        <result column="process_key" property="processKey"/>
+        <result column="instance_id" property="instanceId"/>
+        <result column="execution_id" property="executionId"/>
+        <result column="task_key" property="taskKey"/>
+        <result column="user_id" property="userId"/>
+        <result column="biz_id" property="bizId"/>
+        <result column="user_name" property="userName"/>
+        <result column="user_type" property="userType"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.guowy.workflow.webapp.dto.InstanceRecordDTO">
+        INSERT INTO
+        <include refid="tb_name"/>
+        (process_key, biz_id, instance_id, execution_id, task_key, user_id, user_name, user_type, status, type, content, create_time)
+        VALUES
+        (#{processKey}, #{bizId}, #{instanceId}, #{executionId}, #{taskKey}, #{userId}, #{userName}, #{userType}, #{status}, #{type}, #{content},
+        #{createTime})
+    </insert>
+
+    <select id="select" resultMap="beanMap" parameterType="map">
+        SELECT id, process_key, instance_id, execution_id, task_key, user_id, user_name, user_type, type, status, content, create_time
+        FROM <include refid="tb_name"/>
+        <where>
+            <if test="processKey != null and processKey != ''">
+                AND process_key = #{processKey}
+            </if>
+            <if test="instanceId != null and instanceId != ''">
+                AND instance_id = #{instanceId}
+            </if>
+            <if test="bizId != null and bizId != ''">
+                AND biz_id = #{bizId}
+            </if>
+            <if test="types != null and types.size() > 0">
+                AND type IN
+                <foreach collection="types" item="type" open="(" separator="," close=")">
+                    #{type}
+                </foreach>
+            </if>
+        </where>
+        ORDER BY type ASC, id ASC
+    </select>
+
+    <select id="selectStatus" resultMap="beanMap">
+        SELECT execution_id, task_key, status
+        FROM <include refid="tb_name"/>
+        WHERE instance_id = #{instanceId} AND execution_id IS NOT NULL AND execution_id != ''
+    </select>
+
+    <delete id="deleteByInstanceId">
+        DELETE FROM <include refid="tb_name"/> WHERE instance_id = #{instanceId}
+    </delete>
+
+</mapper>
+
